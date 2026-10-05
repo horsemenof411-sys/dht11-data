@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ESP32 Temperature Monitor</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 700px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .status {
+            margin-bottom: 30px;
+            color: #666;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background: white;
+            width: 280px;
+            padding: 30px;
+            border-radius: 15px;
+
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .label {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .value {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .unit {
+            font-size: 20px;
+            color: #777;
+        }
+
+        .temperature {
+            color: #e53935;
+        }
+
+        .humidity {
+            color: #2196f3;
+        }
+
+        .updated {
+            margin-top: 30px;
+            color: #777;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>ESP32 Environment Monitor</h1>
+
+        <div class="status" id="status">
+            Connecting to Firebase...
+        </div>
+
+        <div class="cards">
+
+            <!-- Temperature -->
+
+            <div class="card">
+
+                <div class="label">
+                    🌡 Temperature
+                </div>
+
+                <div class="value temperature" id="temperature">
+                    --.-
+
+                </div>
+
+                <span class="unit">
+                    °C
+                </span>
+
+            </div>
+
+
+            <!-- Humidity -->
+
+            <div class="card">
+
+                <div class="label">
+                    💧 Humidity
+                </div>
+
+                <div class="value humidity" id="humidity">
+                    --.-
+
+                </div>
+
+                <span class="unit">
+                    %
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="updated" id="updated">
+            Waiting for sensor data...
+        </div>
+
+    </div>
+
+
+    <!-- Firebase -->
+
+    <script type="module">
+
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+        import {
+            getDatabase,
+            ref,
+            onValue
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+        // ==========================================
+        // FIREBASE CONFIGURATION
+        // ==========================================
+
+        const firebaseConfig = {
+
+            apiKey: "AIzaSyAT4Nfb0YsZi9Hrx7OPUnh0feQDPO4kMQo",
+
+            databaseURL:
+                "https://esp321124-default-rtdb.asia-southeast1.firebasedatabase.app/",
+
+        };
+
+
+        // ==========================================
+        // INITIALIZE FIREBASE
+        // ==========================================
+
+        const app = initializeApp(firebaseConfig);
+
+        const database = getDatabase(app);
+
+
+        // ==========================================
+        // DATABASE REFERENCE
+        // ==========================================
+
+        const sensorRef = ref(database, "sensorData");
+
+
+        // ==========================================
+        // READ DATA
+        // ==========================================
+
+        onValue(sensorRef, (snapshot) => {
+
+            const data = snapshot.val();
+
+            if (data) {
+
+                // Temperature
+
+                if (data.temperature !== undefined) {
+
+                    document.getElementById("temperature").textContent =
+                        Number(data.temperature).toFixed(1);
+
+                }
+
+
+                // Humidity
+
+                if (data.humidity !== undefined) {
+
+                    document.getElementById("humidity").textContent =
+                        Number(data.humidity).toFixed(1);
+
+                }
+
+
+                // Connection status
+
+                document.getElementById("status").textContent =
+                    "● Connected to Firebase";
+
+                document.getElementById("status").style.color =
+                    "green";
+
+
+                // Update time
+
+                const now = new Date();
+
+                document.getElementById("updated").textContent =
+                    "Last updated: " + now.toLocaleTimeString();
+
+            }
+
+        });
+
+
+        // ==========================================
+        // ERROR HANDLING
+        // ==========================================
+
+        window.addEventListener("offline", () => {
+
+            document.getElementById("status").textContent =
+                "● Internet disconnected";
+
+            document.getElementById("status").style.color =
+                "red";
+
+        });
+
+    </script>
+
+</body>
+
+</html>
